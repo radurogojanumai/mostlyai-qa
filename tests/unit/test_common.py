@@ -16,7 +16,7 @@ from mostlyai.qa.accuracy import format_display_prefixes, trim_label
 
 
 def test_format_display_prefixes():
-    labels = ["ctx⁝A", "tgt⁝B", "nxt⁝C", "D"]
+    labels = ["ctx::A", "tgt::B", "nxt::C", "D"]
     labels = format_display_prefixes(*labels)
     assert labels == ["context:A", "B", "C", "D"]
 

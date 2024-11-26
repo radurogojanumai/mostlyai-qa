@@ -52,8 +52,8 @@ from mostlyai.qa.common import (
 
 def test_calculate_univariates(cols):
     trn, hol, syn = cols
-    # prefix some columns with "tgt⁝"
-    columns = [f"tgt⁝{c}" if idx > 0 else c for idx, c in enumerate(trn.columns)]
+    # prefix some columns with "tgt::"
+    columns = [f"tgt::{c}" if idx > 0 else c for idx, c in enumerate(trn.columns)]
     trn.columns, syn.columns = columns, columns
     trn, bins = bin_data(trn, 3)
     syn, _ = bin_data(syn, bins)
@@ -61,16 +61,16 @@ def test_calculate_univariates(cols):
     assert uni_acc.columns.to_list() == ["column", "accuracy", "accuracy_max"]
     assert (uni_acc["accuracy"] >= 0.5).all()
     assert (uni_acc["accuracy_max"] >= 0.5).all()
-    assert uni_acc.shape[0] == len([c for c in trn if c.startswith("tgt⁝")])
+    assert uni_acc.shape[0] == len([c for c in trn if c.startswith("tgt::")])
 
 
 def test_calculate_bivariates_columns(cols):
     trn, _, _ = cols
-    # apply ctx⁝/tgt⁝ prefixes and create nxt⁝ columns
-    prefixes = ["ctx⁝", "_⁝", "tgt⁝"]
+    # apply ctx::/tgt:: prefixes and create nxt:: columns
+    prefixes = ["ctx::", "_::", "tgt::"]
     columns = [f"{p}{c}" for p, c in zip(prefixes, trn.columns)]
     trn.columns = columns
-    trn["nxt⁝dt"] = trn["tgt⁝dt"]
+    trn["nxt::dt"] = trn["tgt::dt"]
     columns_df = calculate_bivariate_columns(trn)
     assert columns_df.columns.to_list() == [
         "col1",
@@ -82,11 +82,11 @@ def test_calculate_bivariates_columns(cols):
 
 def test_calculate_bivariates(cols):
     trn, hol, syn = cols
-    # apply ctx⁝/tgt⁝ prefixes and create nxt⁝ columns
-    prefixes = ["ctx⁝", "_.", "tgt⁝"]
+    # apply ctx::/tgt:: prefixes and create nxt:: columns
+    prefixes = ["ctx::", "_.", "tgt::"]
     columns = [f"{p}{c}" for p, c in zip(prefixes, trn.columns)]
     trn.columns, syn.columns = columns, columns
-    trn["nxt⁝dt"], syn["nxt⁝dt"] = trn["tgt⁝dt"], syn["tgt⁝dt"]
+    trn["nxt::dt"], syn["nxt::dt"] = trn["tgt::dt"], syn["tgt::dt"]
     trn, bins = bin_data(trn, 3)
     syn, _ = bin_data(syn, bins)
     biv_acc = calculate_bivariates(trn, syn)
@@ -104,106 +104,106 @@ def test_calculate_bivariates(cols):
 
 def test_calculate_uni_counts(tmp_path, cols):
     trn, hol, syn = cols
-    # apply ctx⁝/tgt⁝ prefixes and create nxt⁝ columns
-    prefixes = ["ctx⁝", "ctx⁝", "tgt⁝"]
+    # apply ctx::/tgt:: prefixes and create nxt:: columns
+    prefixes = ["ctx::", "ctx::", "tgt::"]
     columns = [f"{p}{c}" for p, c in zip(prefixes, trn.columns)]
     trn.columns, syn.columns = columns, columns
-    trn["nxt⁝dt"], syn["nxt⁝dt"] = trn["tgt⁝dt"], syn["tgt⁝dt"]
-    syn = syn[[c for c in syn.columns if c != "ctx⁝num"]]
+    trn["nxt::dt"], syn["nxt::dt"] = trn["tgt::dt"], syn["tgt::dt"]
+    syn = syn[[c for c in syn.columns if c != "ctx::num"]]
     uni_counts_trn = calculate_categorical_uni_counts(trn, hash_rare_values=True)
     uni_counts_syn = calculate_categorical_uni_counts(syn, uni_counts_trn, hash_rare_values=False)
 
     # only categorical columns are considered
-    assert set(uni_counts_trn.keys()) == {"ctx⁝cat"}
-    assert set(uni_counts_syn.keys()) == {"ctx⁝cat"}
+    assert set(uni_counts_trn.keys()) == {"ctx::cat"}
+    assert set(uni_counts_syn.keys()) == {"ctx::cat"}
 
-    assert uni_counts_trn["ctx⁝cat"].sum() == 100
-    assert uni_counts_syn["ctx⁝cat"].sum() == 100
+    assert uni_counts_trn["ctx::cat"].sum() == 100
+    assert uni_counts_syn["ctx::cat"].sum() == 100
 
-    assert uni_counts_trn["ctx⁝cat"].size == 87
-    assert uni_counts_syn["ctx⁝cat"].size == 100
+    assert uni_counts_trn["ctx::cat"].size == 87
+    assert uni_counts_syn["ctx::cat"].size == 100
 
     # all the values are protected, but cat_90 (it appears 10 times)
-    assert set(trn["ctx⁝cat"].values).intersection(set(uni_counts_trn["ctx⁝cat"].keys())) == {"cat_90"}
+    assert set(trn["ctx::cat"].values).intersection(set(uni_counts_trn["ctx::cat"].keys())) == {"cat_90"}
     # none of the values are protected (it's synthetic data)
-    assert set(trn["ctx⁝cat"].values).intersection(set(uni_counts_syn["ctx⁝cat"].keys())) == {
+    assert set(trn["ctx::cat"].values).intersection(set(uni_counts_syn["ctx::cat"].keys())) == {
         f"cat_{i}" for i in range(50, 91)
     }
     # thus, only one category appear both in trn and syn counts
-    assert len(set(uni_counts_trn["ctx⁝cat"].keys()).intersection(set(uni_counts_syn["ctx⁝cat"].keys()))) == 1
+    assert len(set(uni_counts_trn["ctx::cat"].keys()).intersection(set(uni_counts_syn["ctx::cat"].keys()))) == 1
     # protected values have the following pattern: "rare_<hash>"
-    assert uni_counts_trn["ctx⁝cat"].keys()[0].startswith("rare_")
+    assert uni_counts_trn["ctx::cat"].keys()[0].startswith("rare_")
 
 
 def test_calculate_bin_counts(tmp_path, cols):
     trn, hol, syn = cols
-    # apply ctx⁝/tgt⁝ prefixes and create nxt⁝ columns
-    prefixes = ["ctx⁝", "ctx⁝", "tgt⁝"]
+    # apply ctx::/tgt:: prefixes and create nxt:: columns
+    prefixes = ["ctx::", "ctx::", "tgt::"]
     columns = [f"{p}{c}" for p, c in zip(prefixes, trn.columns)]
     trn.columns, syn.columns = columns, columns
-    trn["nxt⁝dt"], syn["nxt⁝dt"] = trn["tgt⁝dt"], syn["tgt⁝dt"]
+    trn["nxt::dt"], syn["nxt::dt"] = trn["tgt::dt"], syn["tgt::dt"]
     trn, bins = bin_data(trn, 3)
     syn, _ = bin_data(syn, bins)
     uni_bin_counts, biv_bin_counts = calculate_bin_counts(trn)
 
-    assert set(uni_bin_counts.keys()) == {"ctx⁝cat", "ctx⁝num", "tgt⁝dt", "nxt⁝dt"}
-    assert uni_bin_counts["ctx⁝cat"].to_dict() == {
+    assert set(uni_bin_counts.keys()) == {"ctx::cat", "ctx::num", "tgt::dt", "nxt::dt"}
+    assert uni_bin_counts["ctx::cat"].to_dict() == {
         "(other)": 85,
         "cat_0": 5,
         "cat_90": 10,
     }
-    assert uni_bin_counts["ctx⁝num"].to_dict() == {"⪰ 0": 24, "⪰ 49": 25, "⪰ 74": 51}
-    assert uni_bin_counts["tgt⁝dt"].to_dict() == {
+    assert uni_bin_counts["ctx::num"].to_dict() == {"⪰ 0": 24, "⪰ 49": 25, "⪰ 74": 51}
+    assert uni_bin_counts["tgt::dt"].to_dict() == {
         "⪰ 2018-Feb-07": 12,
         "⪰ 2018-Feb-19": 51,
         "⪰ 2018-Jan-01": 37,
     }
-    assert uni_bin_counts["nxt⁝dt"].to_dict() == {
+    assert uni_bin_counts["nxt::dt"].to_dict() == {
         "⪰ 2018-Feb-07": 12,
         "⪰ 2018-Feb-19": 51,
         "⪰ 2018-Jan-01": 37,
     }
 
     assert set(biv_bin_counts.keys()) == {
-        ("tgt⁝dt", "ctx⁝num"),
-        ("ctx⁝cat", "tgt⁝dt"),
-        ("nxt⁝dt", "tgt⁝dt"),
-        ("tgt⁝dt", "ctx⁝cat"),
-        ("ctx⁝num", "tgt⁝dt"),
-        ("tgt⁝dt", "nxt⁝dt"),
+        ("tgt::dt", "ctx::num"),
+        ("ctx::cat", "tgt::dt"),
+        ("nxt::dt", "tgt::dt"),
+        ("tgt::dt", "ctx::cat"),
+        ("ctx::num", "tgt::dt"),
+        ("tgt::dt", "nxt::dt"),
     }
-    assert biv_bin_counts[("tgt⁝dt", "ctx⁝num")].to_dict() == {
+    assert biv_bin_counts[("tgt::dt", "ctx::num")].to_dict() == {
         ("⪰ 2018-Feb-07", "⪰ 49"): 12,
         ("⪰ 2018-Feb-19", "⪰ 74"): 51,
         ("⪰ 2018-Jan-01", "⪰ 0"): 24,
         ("⪰ 2018-Jan-01", "⪰ 49"): 13,
     }
-    assert biv_bin_counts[("ctx⁝cat", "tgt⁝dt")].to_dict() == {
+    assert biv_bin_counts[("ctx::cat", "tgt::dt")].to_dict() == {
         ("(other)", "⪰ 2018-Feb-07"): 12,
         ("(other)", "⪰ 2018-Feb-19"): 41,
         ("(other)", "⪰ 2018-Jan-01"): 32,
         ("cat_0", "⪰ 2018-Jan-01"): 5,
         ("cat_90", "⪰ 2018-Feb-19"): 10,
     }
-    assert biv_bin_counts[("nxt⁝dt", "tgt⁝dt")].to_dict() == {
+    assert biv_bin_counts[("nxt::dt", "tgt::dt")].to_dict() == {
         ("⪰ 2018-Feb-07", "⪰ 2018-Feb-07"): 12,
         ("⪰ 2018-Feb-19", "⪰ 2018-Feb-19"): 51,
         ("⪰ 2018-Jan-01", "⪰ 2018-Jan-01"): 37,
     }
-    assert biv_bin_counts[("tgt⁝dt", "ctx⁝cat")].to_dict() == {
+    assert biv_bin_counts[("tgt::dt", "ctx::cat")].to_dict() == {
         ("⪰ 2018-Feb-07", "(other)"): 12,
         ("⪰ 2018-Feb-19", "(other)"): 41,
         ("⪰ 2018-Feb-19", "cat_90"): 10,
         ("⪰ 2018-Jan-01", "(other)"): 32,
         ("⪰ 2018-Jan-01", "cat_0"): 5,
     }
-    assert biv_bin_counts[("ctx⁝num", "tgt⁝dt")].to_dict() == {
+    assert biv_bin_counts[("ctx::num", "tgt::dt")].to_dict() == {
         ("⪰ 0", "⪰ 2018-Jan-01"): 24,
         ("⪰ 49", "⪰ 2018-Feb-07"): 12,
         ("⪰ 49", "⪰ 2018-Jan-01"): 13,
         ("⪰ 74", "⪰ 2018-Feb-19"): 51,
     }
-    assert biv_bin_counts[("tgt⁝dt", "nxt⁝dt")].to_dict() == {
+    assert biv_bin_counts[("tgt::dt", "nxt::dt")].to_dict() == {
         ("⪰ 2018-Feb-07", "⪰ 2018-Feb-07"): 12,
         ("⪰ 2018-Feb-19", "⪰ 2018-Feb-19"): 51,
         ("⪰ 2018-Jan-01", "⪰ 2018-Jan-01"): 37,
@@ -212,8 +212,8 @@ def test_calculate_bin_counts(tmp_path, cols):
 
 def test_plot_store_univariates(cols, workspace):
     trn, hol, syn = cols
-    trn = trn.rename(columns=lambda c: f"tgt⁝{c}")
-    syn = syn.rename(columns=lambda c: f"tgt⁝{c}")
+    trn = trn.rename(columns=lambda c: f"tgt::{c}")
+    syn = syn.rename(columns=lambda c: f"tgt::{c}")
     trn_3, bins = bin_data(trn, 3)
     syn_3, _ = bin_data(syn, bins)
     trn_kdes = calculate_numeric_uni_kdes(trn)
@@ -240,12 +240,12 @@ def test_plot_store_univariates(cols, workspace):
 
 def test_plot_store_bivariates(cols, workspace):
     trn, hol, syn = cols
-    # apply ctx⁝/tgt⁝ prefixes and create nxt⁝ columns
-    prefixes = ["ctx⁝", "tgt⁝", "tgt⁝"]
+    # apply ctx::/tgt:: prefixes and create nxt:: columns
+    prefixes = ["ctx::", "tgt::", "tgt::"]
     columns = [f"{p}{c}" for p, c in zip(prefixes, trn.columns)]
     trn.columns, syn.columns = columns, columns
-    trn["nxt⁝num"], syn["nxt⁝num"] = trn["tgt⁝num"], syn["tgt⁝num"]
-    trn["nxt⁝dt"], syn["nxt⁝dt"] = trn["tgt⁝dt"], syn["tgt⁝dt"]
+    trn["nxt::num"], syn["nxt::num"] = trn["tgt::num"], syn["tgt::num"]
+    trn["nxt::dt"], syn["nxt::dt"] = trn["tgt::dt"], syn["tgt::dt"]
     trn, bins = bin_data(trn, 3)
     syn, _ = bin_data(syn, bins)
     trn_cnts_uni, trn_cnts_biv = calculate_bin_counts(trn)
@@ -266,11 +266,11 @@ def test_plot_store_bivariates(cols, workspace):
 
 def test_plot_store_accuracy_matrix(cols, workspace):
     trn, hol, syn = cols
-    # apply ctx⁝/tgt⁝ prefixes and create nxt⁝ columns
-    prefixes = ["ctx⁝", "_⁝", "tgt⁝"]
+    # apply ctx::/tgt:: prefixes and create nxt:: columns
+    prefixes = ["ctx::", "_::", "tgt::"]
     columns = [f"{p}{c}" for p, c in zip(prefixes, trn.columns)]
     trn.columns, syn.columns = columns, columns
-    trn["nxt⁝dt"], syn["nxt⁝dt"] = trn["tgt⁝dt"], syn["tgt⁝dt"]
+    trn["nxt::dt"], syn["nxt::dt"] = trn["tgt::dt"], syn["tgt::dt"]
     trn, bins = bin_data(trn, 3)
     syn, _ = bin_data(syn, bins)
     uni_acc = calculate_univariates(trn, syn)
@@ -599,8 +599,8 @@ def test_calculate_correlations(cols):
     trn, hol, syn = cols
     trn, bins = bin_data(trn, 3)
     syn, _ = bin_data(syn, bins)
-    # prefix some columns with "tgt⁝"
-    columns = [f"tgt⁝{c}" if c != "cat" else c for idx, c in enumerate(trn.columns)]
+    # prefix some columns with "tgt::"
+    columns = [f"tgt::{c}" if c != "cat" else c for idx, c in enumerate(trn.columns)]
     trn.columns, syn.columns = columns, columns
     corr_trn = calculate_correlations(trn)
     exp_corr_trn = pd.DataFrame(
@@ -608,8 +608,8 @@ def test_calculate_correlations(cols):
             [1.0, 0.933898],
             [0.933898, 1.0],
         ],
-        columns=["tgt⁝num", "tgt⁝dt"],
-        index=["tgt⁝num", "tgt⁝dt"],
+        columns=["tgt::num", "tgt::dt"],
+        index=["tgt::num", "tgt::dt"],
     )
     assert_frame_equal(corr_trn, exp_corr_trn, rtol=1e-4)
     corr_syn = calculate_correlations(syn, corr_trn.columns)
@@ -618,8 +618,8 @@ def test_calculate_correlations(cols):
             [1.0, 0.643165],
             [0.643165, 1.0],
         ],
-        columns=["tgt⁝num", "tgt⁝dt"],
-        index=["tgt⁝num", "tgt⁝dt"],
+        columns=["tgt::num", "tgt::dt"],
+        index=["tgt::num", "tgt::dt"],
     )
     assert_frame_equal(corr_syn, exp_corr_syn, rtol=1e-4)
 
@@ -628,8 +628,8 @@ def test_plot_store_correlation_matrices(cols, workspace):
     trn, hol, syn = cols
     trn, bins = bin_data(trn, 3)
     syn, _ = bin_data(syn, bins)
-    # prefix some columns with "tgt⁝"
-    columns = [f"tgt⁝{c}" if idx > 0 else c for idx, c in enumerate(trn.columns)]
+    # prefix some columns with "tgt::"
+    columns = [f"tgt::{c}" if idx > 0 else c for idx, c in enumerate(trn.columns)]
     trn.columns, syn.columns = columns, columns
     corr_trn = calculate_correlations(trn)
     corr_syn = calculate_correlations(trn, corr_trn.columns)

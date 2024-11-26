@@ -25,8 +25,8 @@ from plotly import graph_objs as go
 from sklearn.decomposition import PCA
 
 
-_OLD_COL_PREFIX = r"^(tgt|ctx|nxt)\."
-_NEW_COL_PREFIX = r"\1⁝"
+_OLD_COL_PREFIX = r"^(tgt|ctx|nxt)(\.|⁝)"
+_NEW_COL_PREFIX = r"\1::"
 
 
 class TemporaryWorkspace(TemporaryDirectory):
@@ -128,7 +128,7 @@ class Statistics:
 
     def load_bins(self) -> dict[str, list]:
         df = pd.read_pickle(self.bins_path)
-        # translate <prefix>. to <prefix>⁝ for compatibility with older versions
+        # harmonise older prefix formats to <prefix>:: for compatibility with older versions
         df["column"] = df["column"].str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         return df.set_index("column")["bins"].to_dict()
 
@@ -137,7 +137,7 @@ class Statistics:
 
     def load_correlations(self) -> pd.DataFrame:
         df = pd.read_parquet(self.correlations_path)
-        # translate <prefix>. to <prefix>⁝ for compatibility with older versions
+        # harmonise older prefix formats to <prefix>:: for compatibility with older versions
         df.index = df.index.str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         df.columns = df.columns.str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         return df
@@ -147,7 +147,7 @@ class Statistics:
 
     def load_univariate_accuracies(self) -> pd.DataFrame:
         df = pd.read_parquet(self.univariate_accuracies_path)
-        # translate <prefix>. to <prefix>⁝ for compatibility with older versions
+        # harmonise older prefix formats to <prefix>:: for compatibility with older versions
         df["column"] = df["column"].str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         return df
 
@@ -156,7 +156,7 @@ class Statistics:
 
     def load_bivariate_accuracies(self) -> pd.DataFrame:
         df = pd.read_parquet(self.bivariate_accuracies_path)
-        # translate <prefix>. to <prefix>⁝ for compatibility with older versions
+        # harmonise older prefix formats to <prefix>:: for compatibility with older versions
         df["col1"] = df["col1"].str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         df["col2"] = df["col2"].str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         return df
@@ -170,7 +170,7 @@ class Statistics:
 
     def load_numeric_uni_kdes(self) -> dict[str, pd.Series]:
         trn_kdes = pd.read_pickle(self.numeric_kdes_uni_path)
-        # translate <prefix>. to <prefix>⁝ for compatibility with older versions
+        # harmonise older prefix formats to <prefix>:: for compatibility with older versions
         trn_kdes["column"] = trn_kdes["column"].str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         trn_kdes = {
             row["column"]: pd.Series(
@@ -191,7 +191,7 @@ class Statistics:
 
     def load_categorical_uni_counts(self) -> dict[str, pd.Series]:
         trn_cnts_uni = pd.read_pickle(self.categorical_counts_uni_path)
-        # translate <prefix>. to <prefix>⁝ for compatibility with older versions
+        # harmonise older prefix formats to <prefix>:: for compatibility with older versions
         trn_cnts_uni["column"] = trn_cnts_uni["column"].str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         trn_cnts_uni = {
             row["column"]: pd.Series(
@@ -230,7 +230,7 @@ class Statistics:
     ) -> tuple[dict[str, pd.Series], dict[tuple[str, str], pd.Series]]:
         # load univariate bin counts
         trn_cnts_uni = pd.read_parquet(self.bin_counts_uni_path)
-        # translate <prefix>. to <prefix>⁝ for compatibility with older versions
+        # harmonise older prefix formats to <prefix>:: for compatibility with older versions
         trn_cnts_uni["column"] = trn_cnts_uni["column"].str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         trn_cnts_uni = {
             row["column"]: pd.Series(
@@ -253,7 +253,7 @@ class Statistics:
             return pd.MultiIndex.from_frame(pd.concat([col1_idx, col2_idx], axis=1))
 
         trn_cnts_biv = pd.read_parquet(self.bin_counts_biv_path)
-        # translate <prefix>. to <prefix>⁝ for compatibility with older versions
+        # harmonise older prefix formats to <prefix>:: for compatibility with older versions
         trn_cnts_biv["col1"] = trn_cnts_biv["col1"].str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         trn_cnts_biv["col2"] = trn_cnts_biv["col2"].str.replace(_OLD_COL_PREFIX, _NEW_COL_PREFIX, regex=True)
         trn_cnts_biv = {

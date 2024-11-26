@@ -25,11 +25,11 @@ from mostlyai.qa.sampling import calculate_embeddings, pull_data_for_embeddings
 
 def test_generate_store_report(tmp_path, cols, workspace):
     trn, hol, syn = cols
-    # apply ctx⁝/tgt⁝ prefixes and create nxt⁝ columns
-    prefixes = ["ctx⁝", "_.", "tgt⁝"]
+    # apply ctx::/tgt:: prefixes and create nxt:: columns
+    prefixes = ["ctx::", "_.", "tgt::"]
     columns = [f"{p}{c}" for p, c in zip(prefixes, trn.columns)]
     trn.columns, hol.columns, syn.columns = columns, columns, columns
-    trn["nxt⁝dt"], hol["nxt⁝dt"], syn["nxt⁝dt"] = trn["tgt⁝dt"], hol["tgt⁝dt"], syn["tgt⁝dt"]
+    trn["nxt::dt"], hol["nxt::dt"], syn["nxt::dt"] = trn["tgt::dt"], hol["tgt::dt"], syn["tgt::dt"]
     acc_trn, bins = mostlyai.qa.accuracy.bin_data(trn, 3)
     acc_syn, _ = mostlyai.qa.accuracy.bin_data(syn, bins)
     acc_uni = accuracy.calculate_univariates(acc_trn, acc_syn)
@@ -99,11 +99,11 @@ def test_generate_store_report(tmp_path, cols, workspace):
 
 def test_summarize_accuracies_by_column(tmp_path, cols):
     trn, hol, syn = cols
-    # apply ctx⁝/tgt⁝ prefixes and create nxt⁝ columns
-    prefixes = ["ctx⁝", "_.", "tgt⁝"]
+    # apply ctx::/tgt:: prefixes and create nxt:: columns
+    prefixes = ["ctx::", "_.", "tgt::"]
     columns = [f"{p}{c}" for p, c in zip(prefixes, trn.columns)]
     trn.columns, syn.columns = columns, columns
-    trn["nxt⁝dt"], syn["nxt⁝dt"] = trn["tgt⁝dt"], syn["tgt⁝dt"]
+    trn["nxt::dt"], syn["nxt::dt"] = trn["tgt::dt"], syn["tgt::dt"]
     trn, bins = mostlyai.qa.accuracy.bin_data(trn, 3)
     syn, _ = mostlyai.qa.accuracy.bin_data(syn, bins)
     uni_acc = accuracy.calculate_univariates(trn, syn)
@@ -112,4 +112,4 @@ def test_summarize_accuracies_by_column(tmp_path, cols):
     assert (tbl_acc["univariate"] >= 0.5).all()
     assert (tbl_acc["bivariate"] >= 0.5).all()
     assert (tbl_acc["coherence"] >= 0.5).all()
-    assert tbl_acc.shape[0] == len([c for c in trn if c.startswith("tgt⁝")])
+    assert tbl_acc.shape[0] == len([c for c in trn if c.startswith("tgt::")])
